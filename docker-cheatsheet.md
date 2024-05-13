@@ -1,3 +1,6 @@
+# Docker Cheatsheet
+This cheatsheet is meant to offer a concise summary of Docker and serve as a quick reference. Here is a reference to another cheatsheet by [Dockerlabs] (https://dockerlabs.collabnix.com/docker/cheatsheet/)
+
 ## Containers
 A container is a standard unit of software that packages up code and all its dependencies so the application runs quickly and reliably from one computing environment to another. A Docker container image is a lightweight, standalone, executable package of software that includes everything needed to run an application: code, runtime, system tools, system libraries, and settings.
 For more information on containers and how they are different from virtual machines, check this [link](https://www.docker.com/resources/what-container/)
@@ -42,6 +45,96 @@ If you want to expose container ports through the host, see the [exposing ports]
 
 Restart policies on crashed docker instances are [covered here](https://docs.docker.com/config/containers/start-containers-automatically/).
 
+### Info
+
+* [`docker ps`](https://docs.docker.com/engine/reference/commandline/ps) shows running containers.
+* [`docker logs`](https://docs.docker.com/engine/reference/commandline/logs) gets logs from container.  (You can use a custom log driver).
+* [`docker inspect`](https://docs.docker.com/engine/reference/commandline/inspect) looks at all the info on a container (including IP address).
+* [`docker events`](https://docs.docker.com/engine/reference/commandline/events) gets events from container.
+* [`docker port`](https://docs.docker.com/engine/reference/commandline/port) shows public facing port of container.
+* [`docker top`](https://docs.docker.com/engine/reference/commandline/top) shows running processes in container.
+* [`docker stats`](https://docs.docker.com/engine/reference/commandline/stats) shows containers' resource usage statistics.
+* [`docker diff`](https://docs.docker.com/engine/reference/commandline/diff) shows changed files in the container's FS.
+
+`docker ps -a` shows running and stopped containers.
+
+`docker stats --all` shows a list of all containers, default shows just running.
+
+### Import / Export
+
+* [`docker cp`](https://docs.docker.com/engine/reference/commandline/cp) copies files or folders between a container and the local filesystem.
+* [`docker export`](https://docs.docker.com/engine/reference/commandline/export) turns the container filesystem into a tarball archive stream to STDOUT.
+
+### Executing Commands
+
+* [`docker exec`](https://docs.docker.com/engine/reference/commandline/exec) to execute a command in container.
+
+To enter a running container, attach a new shell process to a running container called foo, use: `docker exec -it foo /bin/bash`.
+
+## Images
+
+Images are just [templates for docker containers](https://docs.docker.com/engine/understanding-docker/#how-does-a-docker-image-work).
+
+### Lifecycle
+
+* [`docker images`](https://docs.docker.com/engine/reference/commandline/images) shows all images.
+* [`docker import`](https://docs.docker.com/engine/reference/commandline/import) creates an image from a tarball.
+* [`docker build`](https://docs.docker.com/engine/reference/commandline/build) creates image from Dockerfile.
+* [`docker commit`](https://docs.docker.com/engine/reference/commandline/commit) creates image from a container, pausing it temporarily if it is running.
+* [`docker rmi`](https://docs.docker.com/engine/reference/commandline/rmi) removes an image.
+* [`docker load`](https://docs.docker.com/engine/reference/commandline/load) loads an image from a tar archive as STDIN, including images and tags.
+* [`docker save`](https://docs.docker.com/engine/reference/commandline/save) saves an image to a tar archive stream to STDOUT with all parent layers, tags & versions.
+
+### Info
+
+* [`docker history`](https://docs.docker.com/engine/reference/commandline/history) shows history of image.
+* [`docker tag`](https://docs.docker.com/engine/reference/commandline/tag) tags an image to a name (local or registry).
+
+### Cleaning up
+
+While you can use the `docker rmi` command to remove specific images. `docker image prune` is also available for removing unused images
+
+### Prune
+
+* `docker system prune`
+* `docker volume prune`
+* `docker network prune`
+* `docker container prune`
+* `docker image prune`
+
+### Load/Save image
+
+Load an image from file:
+
+```sh
+docker load < my_image.tar.gz
+```
+
+Save an existing image:
+
+```sh
+docker save my_image:my_tag | gzip > my_image.tar.gz
+```
+
+### Import/Export container
+
+Import a container as an image from file:
+
+```sh
+cat my_container.tar.gz | docker import - my_image:my_tag
+```
+
+Export an existing container:
+
+```sh
+docker export my_container | gzip > my_container.tar.gz
+```
+
+### Difference between loading a saved image and importing an exported container as an image
+
+Loading an image using the `load` command creates a new image including its history.  
+Importing a container as an image using the `import` command creates a new image excluding the history which results in a smaller image size compared to loading an image.
+
 ### exposing-ports
 By default, when you run a container, none of the container's ports are exposed to the host. This means you won't be able to access any ports that the container might be listening on. To make a container's ports accessible from the host, you need to publish the ports.
 
@@ -66,12 +159,12 @@ The port number inside the container (where the service listens) doesn't need to
 * [FROM](https://docs.docker.com/engine/reference/builder/#from) Sets the Base Image for subsequent instructions.
 * [MAINTAINER (deprecated - use LABEL instead)](https://docs.docker.com/engine/reference/builder/#maintainer-deprecated) Set the Author field of the generated images.
 * [RUN](https://docs.docker.com/engine/reference/builder/#run) execute any commands in a new layer on top of the current image and commit the results.
-* [CMD](https://docs.docker.com/engine/reference/builder/#cmd) provide defaults for an executing container.
+* [CMD](https://docs.docker.com/engine/reference/builder/#cmd) sets default parameters that can be overridden from the Docker command line interface (CLI) while running a docker container
 * [EXPOSE](https://docs.docker.com/engine/reference/builder/#expose) informs Docker that the container listens on the specified network ports at runtime.  NOTE: does not actually make ports accessible.
 * [ENV](https://docs.docker.com/engine/reference/builder/#env) sets environment variable.
 * [ADD](https://docs.docker.com/engine/reference/builder/#add) copies new files, directories or remote file to container.  Invalidates caches. Avoid `ADD` and use `COPY` instead.
 * [COPY](https://docs.docker.com/engine/reference/builder/#copy) copies new files or directories to container.  By default this copies as root regardless of the USER/WORKDIR settings.  Use `--chown=<user>:<group>` to give ownership to another user/group.  (Same for `ADD`.)
-* [ENTRYPOINT](https://docs.docker.com/engine/reference/builder/#entrypoint) configures a container that will run as an executable.
+* [ENTRYPOINT](https://docs.docker.com/engine/reference/builder/#entrypoint) sets default parameters that cannot be overridden while executing Docker containers with CLI parameters.
 * [VOLUME](https://docs.docker.com/engine/reference/builder/#volume) creates a mount point for externally mounted volumes or other containers.
 * [USER](https://docs.docker.com/engine/reference/builder/#user) sets the user name for following RUN / CMD / ENTRYPOINT commands.
 * [WORKDIR](https://docs.docker.com/engine/reference/builder/#workdir) sets the working directory.
@@ -90,3 +183,25 @@ The port number inside the container (where the service listens) doesn't need to
 ## Layers
 
 The versioned filesystem in Docker is based on layers. They're like [git commits or changesets for filesystems](https://docs.docker.com/engine/userguide/storagedriver/imagesandcontainers/).
+
+## Registry & Repository
+
+A repository is a *hosted* collection of tagged images that together create the file system for a container.
+
+A registry is a *host* -- a server that stores repositories and provides an HTTP API for [managing the uploading and downloading of repositories](https://docs.docker.com/engine/tutorials/dockerrepos/).
+
+Docker.com hosts its own [index](https://hub.docker.com/) to a central registry which contains a large number of repositories.
+
+* [`docker login`](https://docs.docker.com/engine/reference/commandline/login) to login to a registry.
+* [`docker logout`](https://docs.docker.com/engine/reference/commandline/logout) to logout from a registry.
+* [`docker search`](https://docs.docker.com/engine/reference/commandline/search) searches registry for image.
+* [`docker pull`](https://docs.docker.com/engine/reference/commandline/pull) pulls an image from registry to local machine.
+* [`docker push`](https://docs.docker.com/engine/reference/commandline/push) pushes an image to the registry from local machine.
+
+### Run local registry
+
+You can run a local registry by using the [docker distribution](https://github.com/docker/distribution) project and looking at the [local deploy](https://github.com/docker/docker.github.io/blob/master/registry/deploying.md) instructions.
+
+### df
+
+`docker system df` presents a summary of the space currently used by different docker objects.
