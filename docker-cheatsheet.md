@@ -202,6 +202,114 @@ Docker.com hosts its own [index](https://hub.docker.com/) to a central registry 
 
 You can run a local registry by using the [docker distribution](https://github.com/docker/distribution) project and looking at the [local deploy](https://github.com/docker/docker.github.io/blob/master/registry/deploying.md) instructions.
 
+## Useful commands
+
 ### df
 
 `docker system df` presents a summary of the space currently used by different docker objects.
+
+### Kill running containers
+
+```sh
+docker kill $(docker ps -q)
+```
+
+### Delete all containers (force!! running or stopped containers)
+
+```sh
+docker rm -f $(docker ps -qa)
+```
+
+### Delete old containers
+
+```sh
+docker ps -a | grep 'weeks ago' | awk '{print $1}' | xargs docker rm
+```
+
+### Delete stopped containers
+
+```sh
+docker rm -v $(docker ps -a -q -f status=exited)
+```
+
+### Delete containers after stopping
+
+```sh
+docker stop $(docker ps -aq) && docker rm -v $(docker ps -aq)
+```
+
+### Delete dangling images
+
+```sh
+docker rmi $(docker images -q -f dangling=true)
+```
+
+### Delete all images
+
+```sh
+docker rmi $(docker images -q)
+```
+
+### Delete dangling volumes
+
+```sh
+docker volume rm $(docker volume ls -q -f dangling=true)
+```
+
+### Show image dependencies
+
+```sh
+docker images -viz | dot -Tpng -o docker.png
+```
+
+Remove all untagged images:
+
+```sh
+docker rmi $(docker images | grep “^” | awk '{split($0,a," "); print a[3]}')
+```
+
+Remove all exited containers:
+
+```sh
+docker rm -f $(docker ps -a | grep Exit | awk '{ print $1 }')
+```
+
+### Slimming down Docker containers
+
+Cleaning APT in a `RUN` layer - This should be done in the same layer as other `apt` commands. Otherwise, the previous layers still persist in the original information, and your images will still be fat.
+```Dockerfile
+RUN {apt commands} \
+  && apt-get clean \
+  && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+```
+Flatten an image
+```sh
+ID=$(docker run -d image-name /bin/bash)
+docker export $ID | docker import – flat-image-name
+```
+For backup
+```sh
+ID=$(docker run -d image-name /bin/bash)
+(docker export $ID | gzip -c > image.tgz)
+gzip -dc image.tgz | docker import - flat-image-name
+```
+
+### Monitor system resource utilization for running containers
+
+To check the CPU, memory, and network I/O usage of a single container, you can use:
+
+```sh
+docker stats <container>
+```
+
+For all containers listed by ID:
+
+```sh
+docker stats $(docker ps -q)
+```
+
+For all containers listed by name:
+
+```sh
+docker stats $(docker ps --format '{{.Names}}')
+```
