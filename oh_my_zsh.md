@@ -58,6 +58,11 @@ Clone the zsh-syntax-highlighting plugin’s repository and copy it to the “Oh
 git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting
 ```
 
+NOTE: Comments on the terminal become invisible due to the color scheme. Update the following line in `zsh-syntax-highlighting/highlighters/main/main-highlighter.zsh` as per personal preference
+```bash
+: ${ZSH_HIGHLIGHT_STYLES[comment]:=none}
+```
+
 ---
 
 ## Install zsh-autosuggestions
